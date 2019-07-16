@@ -12,7 +12,7 @@ const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
 
 ESLintTester.setDefaultConfig({
-  parser: 'babel-eslint',
+  parser: require.resolve('babel-eslint'),
   parserOptions: {
     ecmaVersion: 6,
     sourceType: 'module',
@@ -268,6 +268,75 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           throw new Error('oh no!');
         }
         useState();
+      }
+    `,
+    `
+      // Valid because the loop doesn't change the order of hooks calls.
+      function RegressionTest() {
+        const res = [];
+        const additionalCond = true;
+        for (let i = 0; i !== 10 && additionalCond; ++i ) {
+          res.push(i);
+        }
+        React.useLayoutEffect(() => {});
+      }
+    `,
+    `
+      // Is valid but hard to compute by brute-forcing
+      function MyComponent() {
+        // 40 conditions
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+        if (c) {} else {}
+
+        // 10 hooks
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
+        useHook();
       }
     `,
   ],

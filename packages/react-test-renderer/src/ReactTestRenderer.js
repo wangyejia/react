@@ -11,14 +11,15 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
+import * as Scheduler from 'scheduler/unstable_mock';
 import {
   getPublicRootInstance,
   createContainer,
   updateContainer,
   flushSync,
   injectIntoDevTools,
+  batchedUpdates,
 } from 'react-reconciler/inline.test';
-import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
@@ -39,15 +40,10 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
+import act from './ReactTestRendererAct';
 
 import {getPublicInstance} from './ReactTestHostConfig';
-import {
-  flushAll,
-  flushNumberOfYields,
-  clearYields,
-  setNowImplementation,
-  yieldValue,
-} from './ReactTestRendererScheduling';
+import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -424,6 +420,8 @@ function propsMatch(props: Object, filter: Object): boolean {
 }
 
 const ReactTestRendererFiber = {
+  _Scheduler: Scheduler,
+
   create(element: React$Element<any>, options: TestRendererOptions) {
     let createNodeMock = defaultTestOptions.createNodeMock;
     let isConcurrent = false;
@@ -442,13 +440,15 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = createContainer(
       container,
-      isConcurrent,
+      isConcurrent ? ConcurrentRoot : LegacyRoot,
       false,
     );
     invariant(root != null, 'something went wrong');
     updateContainer(element, root, null, null);
 
     const entry = {
+      _Scheduler: Scheduler,
+
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
       toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
@@ -461,7 +461,15 @@ const ReactTestRendererFiber = {
         if (container.children.length === 1) {
           return toJSON(container.children[0]);
         }
-
+        if (
+          container.children.length === 2 &&
+          container.children[0].isHidden === true &&
+          container.children[1].isHidden === false
+        ) {
+          // Omit timed out children from output entirely, including the fact that we
+          // temporarily wrap fallback and timed out children in an array.
+          return toJSON(container.children[1]);
+        }
         let renderedChildren = null;
         if (container.children && container.children.length) {
           for (let i = 0; i < container.children.length; i++) {
@@ -504,13 +512,9 @@ const ReactTestRendererFiber = {
         return getPublicRootInstance(root);
       },
 
-      unstable_flushAll: flushAll,
       unstable_flushSync<T>(fn: () => T): T {
-        clearYields();
         return flushSync(fn);
       },
-      unstable_flushNumberOfYields: flushNumberOfYields,
-      unstable_clearYields: clearYields,
     };
 
     Object.defineProperty(
@@ -541,14 +545,10 @@ const ReactTestRendererFiber = {
     return entry;
   },
 
-  unstable_yield: yieldValue,
-  unstable_clearYields: clearYields,
-
-  /* eslint-disable camelcase */
+  /* eslint-disable-next-line camelcase */
   unstable_batchedUpdates: batchedUpdates,
-  /* eslint-enable camelcase */
 
-  unstable_setNowImplementation: setNowImplementation,
+  act,
 };
 
 const fiberToWrapper = new WeakMap();

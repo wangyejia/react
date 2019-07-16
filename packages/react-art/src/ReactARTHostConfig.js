@@ -5,17 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export {
-  unstable_now as now,
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_shouldYield as shouldYield,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 const pooledTransform = new Transform();
 
@@ -334,6 +329,10 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
+export function getChildHostContextForEventComponent() {
+  return NO_CONTEXT;
+}
+
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -346,6 +345,9 @@ export function shouldSetTextContent(type, props) {
 
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
+
+// The ART renderer shouldn't trigger missing act() warnings
+export const warnsIfNotActing = false;
 
 export const supportsMutation = true;
 
@@ -423,4 +425,22 @@ export function unhideInstance(instance, props) {
 
 export function unhideTextInstance(textInstance, text): void {
   // Noop
+}
+
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance<any, any>,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance<any, any>,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance<any, any>,
+): void {
+  throw new Error('Not yet implemented.');
 }

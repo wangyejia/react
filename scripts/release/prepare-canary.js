@@ -10,6 +10,8 @@ const downloadBuildArtifacts = require('./prepare-canary-commands/download-build
 const getLatestMasterBuildNumber = require('./prepare-canary-commands/get-latest-master-build-number');
 const parseParams = require('./prepare-canary-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
+const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
+const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 
 const run = async () => {
   try {
@@ -23,7 +25,13 @@ const run = async () => {
 
     await checkEnvironmentVariables(params);
     await downloadBuildArtifacts(params);
-    await printPrereleaseSummary(params);
+
+    if (!params.skipTests) {
+      await testPackagingFixture(params);
+      await testTracingFixture(params);
+    }
+
+    await printPrereleaseSummary(params, false);
   } catch (error) {
     handleError(error);
   }

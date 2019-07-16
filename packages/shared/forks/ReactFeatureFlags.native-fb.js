@@ -14,13 +14,8 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
 // Re-export dynamic flags from the fbsource version.
 export const {
-  enableHooks,
   debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode,
-  warnAboutDeprecatedLifecycles,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  disableInputAttributeSyncing,
-} = require('ReactFeatureFlags');
+} = require('../shims/ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
@@ -29,6 +24,18 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
+export const enableSchedulerDebugging = false;
+export const debugRenderPhaseSideEffectsForStrictMode = true;
+export const disableJavaScriptURLs = false;
+export const disableInputAttributeSyncing = false;
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+export const warnAboutDeprecatedLifecycles = true;
+export const warnAboutDeprecatedSetNativeProps = true;
+export const enableFlareAPI = false;
+export const enableJSXTransformAPI = false;
+export const warnAboutMissingMockScheduler = true;
+export const revertPassiveEffectsChange = false;
+export const enableUserBlockingEvents = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

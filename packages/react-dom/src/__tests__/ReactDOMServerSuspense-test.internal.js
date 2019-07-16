@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactFeatureFlags;
+let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -26,15 +27,17 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
-const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
+const {resetModules, serverRender, itRenders} = ReactDOMServerIntegrationUtils(
   initModules,
 );
 
@@ -52,39 +55,70 @@ describe('ReactDOMServerSuspense', () => {
   }
 
   it('should render the children when no promise is thrown', async () => {
-    const e = await serverRender(
-      <React.Suspense fallback={<Text text="Fallback" />}>
-        <Text text="Children" />
-      </React.Suspense>,
+    const c = await serverRender(
+      <div>
+        <React.Suspense fallback={<Text text="Fallback" />}>
+          <Text text="Children" />
+        </React.Suspense>
+      </div>,
     );
+    const e = c.children[0];
 
     expect(e.tagName).toBe('DIV');
     expect(e.textContent).toBe('Children');
   });
 
   it('should render the fallback when a promise thrown', async () => {
-    const e = await serverRender(
-      <React.Suspense fallback={<Text text="Fallback" />}>
-        <AsyncText text="Children" />
-      </React.Suspense>,
+    const c = await serverRender(
+      <div>
+        <React.Suspense fallback={<Text text="Fallback" />}>
+          <AsyncText text="Children" />
+        </React.Suspense>
+      </div>,
     );
+    const e = c.children[0];
 
     expect(e.tagName).toBe('DIV');
     expect(e.textContent).toBe('Fallback');
   });
 
   it('should work with nested suspense components', async () => {
-    const e = await serverRender(
-      <React.Suspense fallback={<Text text="Fallback" />}>
-        <div>
-          <Text text="Children" />
-          <React.Suspense fallback={<Text text="Fallback" />}>
-            <AsyncText text="Children" />
-          </React.Suspense>
-        </div>
-      </React.Suspense>,
+    const c = await serverRender(
+      <div>
+        <React.Suspense fallback={<Text text="Fallback" />}>
+          <div>
+            <Text text="Children" />
+            <React.Suspense fallback={<Text text="Fallback" />}>
+              <AsyncText text="Children" />
+            </React.Suspense>
+          </div>
+        </React.Suspense>
+      </div>,
     );
+    const e = c.children[0];
 
-    expect(e.innerHTML).toBe('<div>Children</div><div>Fallback</div>');
+    expect(e.innerHTML).toBe(
+      '<div>Children</div><!--$!--><div>Fallback</div><!--/$-->',
+    );
+  });
+
+  itRenders('a SuspenseList component and its children', async render => {
+    const element = await render(
+      <React.unstable_SuspenseList>
+        <React.Suspense fallback="Loading A">
+          <div>A</div>
+        </React.Suspense>
+        <React.Suspense fallback="Loading B">
+          <div>B</div>
+        </React.Suspense>
+      </React.unstable_SuspenseList>,
+    );
+    const parent = element.parentNode;
+    const divA = parent.children[0];
+    expect(divA.tagName).toBe('DIV');
+    expect(divA.textContent).toBe('A');
+    const divB = parent.children[1];
+    expect(divB.tagName).toBe('DIV');
+    expect(divB.textContent).toBe('B');
   });
 });

@@ -14,15 +14,14 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
+  warnAboutDeprecatedSetNativeProps,
+  revertPassiveEffectsChange,
+  enableUserBlockingEvents,
 } = require('ReactFeatureFlags');
-
-// The rest of the flags are static for better dead code elimination.
-export const enableHooks = true;
 
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
@@ -34,8 +33,13 @@ export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
+export const enableSchedulerDebugging = true;
 
 export const enableStableConcurrentModeAPIs = false;
+
+export const enableSuspenseServerRenderer = true;
+
+export const disableJavaScriptURLs = true;
 
 let refCount = 0;
 export function addUserTimingListener() {
@@ -63,6 +67,12 @@ function updateFlagOutsideOfReactCallStack() {
     });
   }
 }
+
+export const enableFlareAPI = true;
+
+export const enableJSXTransformAPI = true;
+
+export const warnAboutMissingMockScheduler = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
